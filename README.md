@@ -5,7 +5,7 @@
 [macchina.io Remote Manager](https://macchina.io) provides secure remote access to connected devices
 via HTTP or other TCP-based protocols and applications such as secure shell (SSH) or
 Virtual Network Computing (VNC). With macchina.io Remote Manager, any network-connected device
-running the Remote Manager Agent software (*WebTunnelAgent*, contained in this SDK)
+running the Remote Manager Agent software (*WebTunnelAgent*)
 can be securely accessed remotely over the internet from browsers, mobile apps, desktop,
 server or cloud applications.
 
@@ -28,14 +28,16 @@ There is also a [blog post](https://macchina.io/blog/?p=257) showing step-by-ste
 
 This repository contains a [docker-compose.yml](docker-compose.yml) file (and supporting
 files) for setting up all necessary containers for running the macchina.io Remote Manager
-server. This includes:
+server with Docker. This includes:
 
   - the macchina.io Remote Manager Server (also known as *reflector*, from the
     [macchina/reflector](https://hub.docker.com/repository/docker/macchina/reflector)
     repository on [Docker Hub](https://hub.docker.com)
-  - a MariaDB server
-  - a HAProxy server as frontend to the Remote Manager server, providing
-    TLS termination and request throttling
+  - a [MariaDB](https://hub.docker.com/_/mariadb) server
+  - a [HAProxy](https://hub.docker.com/_/haproxy) server as frontend to the
+    Remote Manager server, providing TLS termination and load balancing
+  - a [Redis](https://hub.docker.com/_/redis) server, used for storing
+    session information in a setup with multiple reflector instances
 
 
 ### Prerequisites
@@ -49,19 +51,24 @@ To run the macchina.io Remote Manager server, you will need the following:
     you'll need corresponding DNS entries for `*.devices.company.com` and
     `devices.company.com` pointing to the public IP address of your server.
     The included example files use the domain `demo.my-devices.net`.
-  - A wildcard certificate (and corresponding private key) for your domain. A wildcard
-    certificate for `*.demo.my-devices.net` is included in
+  - A proper wildcard certificate (and corresponding private key) for your domain. A
+    wildcard certificate for `*.demo.my-devices.net` is included in
     [haproxy/reflector.pem](haproxy/reflector.pem). For HAProxy, private key and
-    certificate must be combined in one file in PEM format.
+    certificate must be combined in one file in PEM format. See the [`cert`](cert) directory
+    for a [script](cert/gencert.sh) to generate a private key and self-signed certificate.
   - A Remote Manager server license file (`reflector.license`) for your domain.
     A sample license file for the domain `demo.my-devices.net` is included
     (limited to 10 connected devices) and can be found in
     [reflector/reflector.license](reflector/reflector.license).
+    You will need to replace the included license file with one for your own
+    domain.
 
 You may also want to have the *macchina.io Remote Manager Set-Up and Administration Guide*
 document ready at hand.
 
-Furthermore, you should be familiar with Docker and Docker Compose.
+Furthermore, you should already be familiar with [Docker](https://docs.docker.com) and
+[Docker Compose](https://docs.docker.com/compose/).
+
 
 ### Setting Up
 
@@ -73,10 +80,14 @@ Setting up the system consists of two steps:
 #### Build the Docker Images
 
 Two Docker images need to be built. First, the macchina.io Remote Manager Server
-(macchina/reflector) image needs to be extended to include the license file.
+(macchina/reflector) image needs to be extended to include the license file
+and the custom [reflector.properties](reflector/reflector.properties] configuration
+file (with Redis support enabled).
 The necessary [`Dockerfile`](reflector/Dockerfile) is in the `reflector` directory.
 
 Second, the HAProxy image must be extended with a proper configuration.
+This includes the TLS certificate and private key. Both must be in a single file
+named `reflector.pem`.
 The [`Dockerfile`](haproxy/Dockerfile) for that is in the `haproxy` directory.
 
 To build the images, run:
@@ -97,11 +108,12 @@ $ docker-compose up
 Then, in a separate shell, create the database schema.
 
 ```
-$ mysql -h 127.0.0.1 reflector -u reflector -p <createtables.sql
+$ mysql -h 127.0.0.1 reflector -u reflector -p <mysql/createtables.sql
 ```
 
-The default password for the `reflector` user is `reflector` (set in the
-`docker-compose.yml` file).
+The default password for the `reflector` MySQL/MariaDB user is `reflector`
+(set in the `docker-compose.yml` file). You may want to change it, along
+with the root password as well.
 
 After creating the database schema, you can stop the stack by simply
 typing `CTRL-C` in the shell running `docker-compose up`.
@@ -120,3 +132,11 @@ The first step after starting the stack is to log-in to the
 web user interface and change the default password for the `admin`
 account.
 
+The DNS entries for `demo.my-devices.net` and `*.demo.my-devices.net`
+have been set up to point to `127.0.0.1`. So if you have a browser
+running on the same machine your containers are running on, you
+can go to https://demo.my-devices.net to sign in to your new
+macchina.io Remote Manager server.
+
+Note: you will not be able to sign-in if the domain name in the
+URL does not match the one the server is configured for.
