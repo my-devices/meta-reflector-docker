@@ -134,7 +134,8 @@ account.
 
 The DNS entries for `demo.my-devices.net` and `*.demo.my-devices.net`
 have been set up to point to `127.0.0.1`. So if you have a browser
-running on the same machine your containers are running on, you
+running on the same machine your containers are running on, and
+you're using the default domain `demo.my-devices.net`, you
 can go to https://demo.my-devices.net to sign in to your new
 macchina.io Remote Manager server.
 
