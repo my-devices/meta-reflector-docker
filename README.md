@@ -47,7 +47,7 @@ To run the macchina.io Remote Manager server, you will need the following:
   - A host system (Linux, macOS, Windows) with Docker and Docker Compose installed.
   - The MySQL or MariaDB client (`mysql`) for setting up the database schema.
   - A wildcard domain with a properly set-up wildcard DNS entry. For example,
-    if your Remote Manager instance will use the domain *devices.company.com*,
+    if your Remote Manager instance will use the domain `devices.company.com`,
     you'll need corresponding DNS entries for `*.devices.company.com` and
     `devices.company.com` pointing to the public IP address of your server.
     The included example files use the domain `demo.my-devices.net`.
@@ -81,7 +81,7 @@ Setting up the system consists of two steps:
 
 Two Docker images need to be built. First, the macchina.io Remote Manager Server
 (macchina/reflector) image needs to be extended to include the license file
-and the custom [reflector.properties](reflector/reflector.properties] configuration
+and the custom [reflector.properties](reflector/reflector.properties) configuration
 file (with Redis support enabled).
 The necessary [`Dockerfile`](reflector/Dockerfile) is in the `reflector` directory.
 
