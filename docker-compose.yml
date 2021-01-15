@@ -14,6 +14,7 @@ services:
       MYSQL_USERNAME: reflector
       MYSQL_PASSWORD: reflector
       MYSQL_HOST: mariadb
+      MIGRATE_SCHEMA: "true"
       LOGCHANNEL: file
       LOGPATH: /home/reflector/var/log/reflector.log
     volumes:
